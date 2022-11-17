@@ -4,6 +4,8 @@ import App from '@/App.vue'
 import CustomerScreen from '@/views/CustomerScreen.vue'
 import OperatorScreen from '@/views/OperatorScreen.vue'
 import StatusScreen from '@/views/StatusScreen.vue'
+import CreateGroup from '@/views/CreateGroup.vue'
+import MyGroups from '@/views/MyGroups.vue'
 
 import { BootstrapVue, BootstrapVueIcons } from "bootstrap-vue"
 
@@ -28,7 +30,16 @@ const router = new VueRouter({
     {
       path: "/",
       component: StatusScreen,
+    },
+    {
+      path: "/creategroup",
+      component: CreateGroup,
+    },
+    {
+      path: "/mygroups",
+      component: MyGroups,
     }
+
   ],
 })
 

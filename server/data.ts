@@ -28,3 +28,13 @@ export interface Operator {
   _id: string
   name: string
 }
+
+export interface Group {
+  _id?: string
+  name: string
+  creator: string
+  description: string
+  members: string[]
+  date: string
+  locked: boolean
+}

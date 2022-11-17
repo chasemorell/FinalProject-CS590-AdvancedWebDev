@@ -1,14 +1,15 @@
-import express, { NextFunction, Request, Response } from 'express'
+import express, { application, NextFunction, Request, Response } from 'express'
 import bodyParser from 'body-parser'
 import pino from 'pino'
 import expressPinoLogger from 'express-pino-logger'
-import { Collection, Db, MongoClient, ObjectId } from 'mongodb'
-import { DraftOrder, Order, possibleIngredients } from './data'
+import { Collection, Db, MongoClient, ObjectId, OptionalId } from 'mongodb'
+import { DraftOrder, Group, Order, possibleIngredients } from './data'
 import session from 'express-session'
 import MongoStore from 'connect-mongo'
 import { Issuer, Strategy } from 'openid-client'
 import passport from 'passport'
 import { keycloak } from "./secrets"
+import { emitWarning } from 'process'
 
 // set up Mongo
 const mongoUrl = process.env.MONGO_URL || 'mongodb://127.0.0.1:27017'
@@ -17,6 +18,7 @@ let db: Db
 let customers: Collection
 let orders: Collection
 let operators: Collection
+let groups: Collection
 
 // set up Express
 const app = express()
@@ -64,6 +66,15 @@ function checkAuthenticated(req: Request, res: Response, next: NextFunction) {
     return
   }
 
+  next()
+}
+
+function checkOwnership(req: Request, res: Response, next: NextFunction) {
+  console.log(req.user)
+  if (req.user.preferred_username != req.query.username){
+    res.sendStatus(403)
+    return
+  }
   next()
 }
 
@@ -165,6 +176,24 @@ app.post("/api/customer/submit-draft-order", checkAuthenticated, async (req, res
   res.status(200).json({ status: "ok" })
 })
 
+app.put("/api/creategroup", checkAuthenticated, async(req, res) =>{
+  try {
+    const group = req.body as OptionalId<Document>
+    const result = await groups.insertOne(group);
+
+    result
+        ? res.status(201).send(`Successfully created a new group with id ${result.insertedId}`)
+        : res.status(500).send("Failed to create a new group.");
+} catch (error) {
+    console.error(error);
+    res.status(400).send(error.message);
+}
+})
+
+app.get("/api/getgroups", checkAuthenticated, checkOwnership, async(req, res) => {
+  res.status(200).json(await groups.find({ creator: req.params.username }).toArray())
+})
+
 app.put("/api/order/:orderId", checkAuthenticated, async (req, res) => {
   const order: Order = req.body
 
@@ -219,6 +248,7 @@ client.connect().then(() => {
   operators = db.collection('operators')
   orders = db.collection('orders')
   customers = db.collection('customers')
+  groups = db.collection('groups')
 
   Issuer.discover("http://127.0.0.1:8081/auth/realms/lastnight/.well-known/openid-configuration").then(issuer => {
     const client = new issuer.Client(keycloak)

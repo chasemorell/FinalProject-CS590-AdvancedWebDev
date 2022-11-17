@@ -5,8 +5,8 @@
         <img src="@/assets/logo.png" alt="Logo" class="d-inline-block align-top" style="max-height:8vh" >
       </b-navbar-brand>
       <b-navbar-nav>
-        <b-nav-item href="/">Home</b-nav-item>
-        <b-nav-item v-if="user?.roles?.includes('customer')" href="/customer">My Groups</b-nav-item>
+        <b-nav-item href="/creategroup">Home</b-nav-item>
+        <b-nav-item v-if="user?.roles?.includes('customer')" href="/mygroups">My Groups</b-nav-item>
         <b-nav-item v-if="user?.roles?.includes('customer')" href="/customer">Search</b-nav-item>
         <b-nav-item v-if="user?.roles?.includes('operator')" href="/operator">(Old) My Work Screen</b-nav-item>
 
