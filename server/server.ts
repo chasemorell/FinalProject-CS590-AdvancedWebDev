@@ -191,7 +191,7 @@ app.put("/api/creategroup", checkAuthenticated, async(req, res) =>{
 })
 
 app.get("/api/getgroups", checkAuthenticated, checkOwnership, async(req, res) => {
-  res.status(200).json(await groups.find({ creator: req.params.username }).toArray())
+  res.status(200).json(await groups.find({ creator: req.query.username }).toArray())
 })
 
 app.put("/api/order/:orderId", checkAuthenticated, async (req, res) => {

@@ -106,7 +106,7 @@ const submitTooltip = computed(() => {
     isGroupLoading.value = true
 
     //add user info to group
-    group.creator = user.value.email
+    group.creator = user.value.preferred_username
     group.members.push(group.creator)
 
     //send api request
