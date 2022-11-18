@@ -31,10 +31,17 @@ export interface Operator {
 
 export interface Group {
   _id?: string
-  name: string
-  creator: string
-  description: string
-  members: string[]
-  date: string
-  locked: boolean
+  name?: string
+  creator?: string
+  description?: string
+  members?: string[]
+  date?: string
+  locked?: boolean
+}
+
+export interface ImageRecord{
+  _id?: string
+  groupId?: string
+  creator?: string
+  image?: any
 }

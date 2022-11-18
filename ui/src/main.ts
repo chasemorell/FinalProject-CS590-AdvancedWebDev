@@ -6,6 +6,7 @@ import OperatorScreen from '@/views/OperatorScreen.vue'
 import StatusScreen from '@/views/StatusScreen.vue'
 import CreateGroup from '@/views/CreateGroup.vue'
 import MyGroups from '@/views/MyGroups.vue'
+import Group from '@/views/Group.vue'
 
 import { BootstrapVue, BootstrapVueIcons } from "bootstrap-vue"
 
@@ -38,8 +39,17 @@ const router = new VueRouter({
     {
       path: "/mygroups",
       component: MyGroups,
+    },
+    {
+      path: "/group/:groupId",
+      name: 'group',
+      component: Group,
+      props (route) {
+        return {
+          groupId: route.params.groupId
+        }
+      }
     }
-
   ],
 })
 

@@ -11,6 +11,7 @@ import passport from 'passport'
 import { keycloak } from "./secrets"
 import { emitWarning } from 'process'
 
+
 // set up Mongo
 const mongoUrl = process.env.MONGO_URL || 'mongodb://127.0.0.1:27017'
 const client = new MongoClient(mongoUrl)
@@ -19,6 +20,7 @@ let customers: Collection
 let orders: Collection
 let operators: Collection
 let groups: Collection
+let images: Collection
 
 // set up Express
 const app = express()
@@ -176,6 +178,25 @@ app.post("/api/customer/submit-draft-order", checkAuthenticated, async (req, res
   res.status(200).json({ status: "ok" })
 })
 
+app.put("/api/uploadimages", checkAuthenticated, async(req, res) =>{
+  try {
+    console.log(req.body)
+    await req.body.forEach(async (element: any) => {
+      const image = element as OptionalId<Document>
+      const result = await images.insertOne(image)
+    });
+    res.status(201).send(`Success`)
+
+} catch (error) {
+    console.error(error);
+    res.status(400).send(error.message);
+}
+})
+
+app.get("/api/getimages", checkAuthenticated, async(req, res) =>{
+  res.status(200).json(await images.find({ groupId: req.query.groupId }).toArray())
+})
+
 app.put("/api/creategroup", checkAuthenticated, async(req, res) =>{
   try {
     const group = req.body as OptionalId<Document>
@@ -192,6 +213,10 @@ app.put("/api/creategroup", checkAuthenticated, async(req, res) =>{
 
 app.get("/api/getgroups", checkAuthenticated, checkOwnership, async(req, res) => {
   res.status(200).json(await groups.find({ creator: req.query.username }).toArray())
+})
+
+app.get("/api/getgroup", checkAuthenticated, checkOwnership, async(req, res) => {
+  res.status(200).json(await groups.find({ _id: new ObjectId(String(req.query.groupId)), members: req.query.username }).toArray())
 })
 
 app.put("/api/order/:orderId", checkAuthenticated, async (req, res) => {
@@ -249,6 +274,7 @@ client.connect().then(() => {
   orders = db.collection('orders')
   customers = db.collection('customers')
   groups = db.collection('groups')
+  images = db.collection('images')
 
   Issuer.discover("http://127.0.0.1:8081/auth/realms/lastnight/.well-known/openid-configuration").then(issuer => {
     const client = new issuer.Client(keycloak)

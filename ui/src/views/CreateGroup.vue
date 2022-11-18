@@ -107,7 +107,9 @@ const submitTooltip = computed(() => {
 
     //add user info to group
     group.creator = user.value.preferred_username
-    group.members.push(group.creator)
+    if(group.creator){
+      group.members?.push(group.creator)
+    }
 
     //send api request
     const response = await fetch(

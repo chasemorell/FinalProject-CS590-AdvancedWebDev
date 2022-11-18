@@ -13,10 +13,10 @@
                         {{g.description}}
                     </div>
                     <b-card-text>
-                        {{g.date}}, Members: {{g.members.length}}
+                        {{g.date}}, Members: {{g.members?.length}}
                     </b-card-text>
         
-                    <b-button href="#" variant="primary">View</b-button>
+                    <b-button @click="$router.push({name:'group', params: {groupId: String(g._id)}})" variant="primary">View</b-button>
                 </b-card>
               </b-col>
             </b-row>
