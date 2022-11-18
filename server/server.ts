@@ -25,8 +25,8 @@ let images: Collection
 // set up Express
 const app = express()
 const port = parseInt(process.env.PORT) || 8095
-app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({ extended: true }))
+//app.use(bodyParser.urlencoded({ extended: true, limit: "50mb"}))
+app.use(bodyParser.json({ limit: "50mb" }))
 
 // set up Pino logging
 const logger = pino({
