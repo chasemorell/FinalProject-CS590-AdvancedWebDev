@@ -21,6 +21,7 @@ let orders: Collection
 let operators: Collection
 let groups: Collection
 let images: Collection
+let comments: Collection
 
 // set up Express
 const app = express()
@@ -197,6 +198,10 @@ app.get("/api/getimages", checkAuthenticated, async(req, res) =>{
   res.status(200).json(await images.find({ groupId: req.query.groupId }).toArray())
 })
 
+app.delete("/api/image", checkAuthenticated, async(req, res) =>{
+  res.status(200).json(await images.deleteOne({ _id: new ObjectId(String(req.query.imageId)) }))
+})
+
 app.put("/api/creategroup", checkAuthenticated, async(req, res) =>{
   try {
     const group = req.body as OptionalId<Document>
@@ -209,6 +214,28 @@ app.put("/api/creategroup", checkAuthenticated, async(req, res) =>{
     console.error(error);
     res.status(400).send(error.message);
 }
+})
+
+app.put("/api/comment", checkAuthenticated, async(req, res) =>{
+  try {
+    const comment = req.body as OptionalId<Document>
+    const result = await comments.insertOne(comment);
+
+    result
+        ? res.status(201).send(`Successfully created a new comment with id ${result.insertedId}`)
+        : res.status(500).send("Failed to create a new comment.");
+} catch (error) {
+    console.error(error);
+    res.status(400).send(error.message);
+}
+})
+
+app.get("/api/comments", checkAuthenticated, async(req, res) =>{
+  res.status(200).json(await comments.find({ groupId: req.query.groupId }).toArray())
+})
+
+app.delete("/api/comment", checkAuthenticated, async(req, res) =>{
+  res.status(200).json(await comments.deleteOne({ _id: new ObjectId(String(req.query.commentId)) }))
 })
 
 app.get("/api/getgroups", checkAuthenticated, checkOwnership, async(req, res) => {
@@ -275,6 +302,7 @@ client.connect().then(() => {
   customers = db.collection('customers')
   groups = db.collection('groups')
   images = db.collection('images')
+  comments = db.collection("comments")
 
   Issuer.discover("http://127.0.0.1:8081/auth/realms/lastnight/.well-known/openid-configuration").then(issuer => {
     const client = new issuer.Client(keycloak)

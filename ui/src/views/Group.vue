@@ -10,7 +10,11 @@
         <div class="gallery-image" style="position: relative;" v-for="n in imageRecordsPage" >
           <img :src="n.image" alt="Image" class="image">
           <div class="middle">
-            <div class="text">{{n.creator}}</div>
+            <b-button v-b-modal.image-modal @click="expandImageSrc = n.image">Expand</b-button>
+            <br>
+            <br>
+            <b-button v-if="n.creator==user.preferred_username" @click="deleteImage(String(n._id))" variant="danger">Delete</b-button>
+            <p>{{n.creator}}</p>
           </div>
         </div>
       </div>
@@ -24,15 +28,26 @@
         align="center"
       ></b-pagination>
       </div>
+      <p class="text-center" style="color:grey">{{imageRecords.length}} images</p>
       <br>
       <div>
         <b-tabs content-class="mt-3" align="center">
           <b-tab title="Comments" active>
-            <h1>Comments</h1>
+            <h1 v-if="comments?.length != 1">{{comments?.length}} Comments</h1>
+            <h1 v-else>{{comments?.length}}Comment</h1>
             <form class="comment">
-              <b-form-input v-model="newCommentText" placeholder="Comment"></b-form-input>
-              <b-button @click="" variant="primary">Post</b-button>
+              <b-form-input v-model="newCommentText" placeholder="Add Comment"></b-form-input>
+              <b-button @click="submitComment" variant="primary">Post</b-button>
             </form>
+            <div>
+              <b-table striped hover :items="comments" :fields="['message',{key:'creator',label:'User'}, 'date','action']">
+                <template #cell(action)="row">
+                  <b-button v-if="row.item.creator=user.preferred_username" size="sm" @click="deleteComment(row.item)" class="mr-2">
+                    Delete 
+                  </b-button>
+                </template>
+              </b-table>
+            </div>
             
           </b-tab>
           <b-tab title="Upload Photos">
@@ -56,12 +71,21 @@
           <b-tab title="Info"><p>I'm a disabled tab!</p></b-tab>
         </b-tabs>
       </div>
+      <br>
+      <br>
+      <p>Chase Morell 2022</p>
+      <b-modal ok-only size='xl' id="image-modal">
+        <div style="text-align: center;">
+          <img width="100%" :src="expandImageSrc" alt="Image" >
+        </div>
+        
+      </b-modal>
     </div>
 </template>
   
 <script setup lang="ts">
   import { watch, ref, Ref, inject, computed } from 'vue'
-  import { Operator, Order, Group, ImageRecord } from "../../../server/data"
+  import { Group, ImageRecord, Comment } from "../../../server/data"
   import GroupList from '../Components/GroupList.vue'
   import VueRouter from 'vue-router'
 
@@ -71,8 +95,11 @@
 
   const imageRecords: Ref<ImageRecord[]> = ref<ImageRecord[]>([])
   const images: Ref<any[]> = ref<any[]>([])
+  const expandImageSrc: Ref<string> = ref("")
 
   const currentPage: Ref<number> = ref(1)
+
+  const comments: Ref<Comment[]> = ref<Comment[]>([])
 
   const newCommentText: Ref<string> = ref("")
 
@@ -110,6 +137,7 @@
     if (user.value.preferred_username) {
       await getGroup()
       await getImages()
+      await getComments()
     }
   }
 
@@ -131,6 +159,8 @@
     )
     
     imageRecords.value = (await response.json())
+
+    images.value = []
 
     let id = 1
     imageRecords.value.forEach(element => {
@@ -220,8 +250,101 @@
         body: JSON.stringify(files)
       }
     )
+
+    await getImages()
     //console.log(fileList)
   }
+
+  async function deleteImage(id: String) {
+    const response = await fetch(
+      "/api/image?" + new URLSearchParams({
+          username: user.value.preferred_username,
+          groupId: groupId?? "",
+          imageId: String(id)
+        }),
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "DELETE",
+      }
+    )
+    if(response.ok){
+      await getImages()
+    }else{
+
+    }
+  }
+
+  async function submitComment() {
+
+    let date = new Date()
+  
+    const comment: Comment = {
+      message: newCommentText.value,
+      creator: user.value.preferred_username,
+      groupId: String(groupId),
+      date: date.toDateString()
+    }
+    //send api request
+    const response = await fetch(
+      "/api/comment/",
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "PUT",
+        body: JSON.stringify(comment)
+      }
+    )
+    if(response.ok){
+      await getComments()
+    }else{
+
+    }
+  }
+
+  async function getComments() {
+    //send api request
+    const response = await fetch(
+      "/api/comments?" + new URLSearchParams({
+          username: user.value.preferred_username,
+          groupId: groupId?? ""
+        }),
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "GET",
+      }
+    )
+    comments.value = (await response.json())
+  }
+
+  async function deleteComment(row: any) {
+    console.log(row)
+    const response = await fetch(
+      "/api/comment?" + new URLSearchParams({
+          username: user.value.preferred_username,
+          groupId: groupId?? "",
+          commentId: row._id
+        }),
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "DELETE",
+      }
+    )
+    if(response.ok){
+      await getComments()
+    }else{
+
+    }
+  }
+
+
+
 </script>
 
 <!-- SASS styling -->

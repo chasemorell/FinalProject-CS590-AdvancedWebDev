@@ -1,3 +1,5 @@
+import { cp } from "fs"
+
 export const possibleIngredients = [
   "strawberry",
   "milk",
@@ -44,4 +46,12 @@ export interface ImageRecord{
   groupId?: string
   creator?: string
   image?: any
+}
+
+export interface Comment{
+  _id?: string
+  message?: string
+  creator: string
+  groupId: string
+  date?: string
 }
